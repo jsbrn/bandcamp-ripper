@@ -7,6 +7,7 @@ import sys
 import argparse
 import re
 import json
+import glob
 
 import yt_dlp
 import requests
@@ -97,26 +98,31 @@ for album in albums:
             if len(album_matches) > 0:
                 url = album_matches[0]
             print("SELECTED URL "+url+" FOR DOWNLOAD")
+
             #Make folder if it doesn't exist
             path = os.path.join(args.output_folder, artist, title)
             try:
                 os.makedirs(path)
             except OSError as error:
                 print("FAILED TO MAKE DIRECTORY "+path, error)
+
             # Fetch album length and other details
             existing_files_count = len(os.listdir(path))
             page_soup = BeautifulSoup(requests.get(url).content, "html.parser")
-            track_count = len(page_soup.find_all("tr", class_="track_row_view"))
+            track_count = max(1, len(page_soup.find_all("tr", class_="track_row_view")))
+
             # Download if missing tracks, otherwise skip
+            print("TRACK COUNTS: "+str(existing_files_count)+" / " + str(track_count))
             if existing_files_count < track_count:
                 print("MISSING "+str(track_count-existing_files_count)+" OUT OF "+str(track_count)+" TRACKS")
                 print("DOWNLOADING...")
 
-                #subprocess.run("cd \""+path+"\";yt-dlp "+url+" --embed-thumbnail --add-metadata --output \"%(playlist_index)s - %(title)s.%(ext)s\"", shell=True)
+                # Download the album
                 ytdl_opts = {
                     "ignoreerrors": True, 
                     "verbose": False, 
                     "outtmpl": path+"/%(playlist_index)s - %(title)s.%(ext)s", 
+                    "writethumbnail": True,
                     'postprocessors': [
                         {
                             'key': 'FFmpegMetadata'
@@ -132,7 +138,12 @@ for album in albums:
                         error_code = ydl.download(url)
                     except:
                         pass
-                
+
+                # Clean up artwork
+                for f in glob.glob(os.path.join(path, "*.jpg")):
+                    os.remove(f)
+
+                # Verify download
                 existing_files_count = len(os.listdir(path))
                 if existing_files_count < track_count:
                     print("SAVED "+str(existing_files_count)+" TRACKS TO "+path)
@@ -152,6 +163,7 @@ for album in albums:
         time.sleep(1)
         print(SEPARATOR)
 
+# Show summary
 print("DONE. REMEMBER TO BUY YOUR ALBUMS! THANK YOU FOR SUPPORTING ARTISTS DIRECTLY AND TAKING A STAND AGAINST DRM.\n")
 print("ALBUMS IN SPOTIFY DATA: "+str(album_count))
 print("ADDED "+str(successful_count)+" COMPLETE ALBUMS TO LIBRARY (" + str(existing_count) + " FOUND IN LIBRARY)")
