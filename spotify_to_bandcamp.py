@@ -5,7 +5,10 @@ import os
 import subprocess
 import sys
 import argparse
+import re
+import json
 
+import yt_dlp
 import requests
 from bs4 import BeautifulSoup
 
@@ -16,15 +19,28 @@ argparser = argparse.ArgumentParser()
 argparser.add_argument("-p", "--playlists_file", required=True)
 argparser.add_argument("-l", "--library_file", required=True)
 argparser.add_argument("-o", "--output_folder", required=True)
+argparser.add_argument("-a", "--artist", default="")
 args = argparser.parse_args()
 
-# Parse both json files into a sorted unique list of "Album :::: Artist" entries separated by newline
-# Requires jq to be installed on the system
-command = "{ cat "+args.library_file+" | jq .tracks[] | jq -r '.album + \" :::: \" + .artist' ; cat "+args.playlists_file+" | jq .playlists[].items[].track | jq -r '.albumName + \" :::: \" + .artistName' ; } | sort | uniq"
-output = subprocess.check_output(command, shell=True, text=True).strip()
+# Parse both json files into a set of of "Album :::: Artist" entries separated by newline
+# TODO: if other streaming sites are added as a source this part will need to be more robust
+parsed_albums = []
+with open(args.library_file, 'r') as file:
+    data = json.load(file)
+    for track in data["tracks"]:
+        if args.artist == "" or track["artist"] == args.artist:
+            parsed_albums.append(track["album"] + " :::: " + track["artist"])
+    file.close()
 
-# Split the output into an array
-albums = output.split("\n")
+with open(args.playlists_file, 'r') as file:
+    data = json.load(file)
+    for playlist in data["playlists"]:
+        for item in playlist["items"]:
+            if args.artist == "" or item["track"]["artistName"] == args.artist:
+                parsed_albums.append(item["track"]["albumName"] + " :::: " + item["track"]["artistName"])
+    file.close()
+
+albums = set(parsed_albums)
 album_count = len(albums)
 
 
@@ -47,6 +63,9 @@ for album in albums:
         search_soup = BeautifulSoup(requests.get("https://bandcamp.com/search?q="+title+"+"+artist).content, "html.parser")
         results = search_soup.find_all("li", class_="searchresult")
 
+        if len(results) == 0:
+            print("            (none)")
+
         # Collect the matches
         all_matches = []
         album_matches = []
@@ -56,7 +75,15 @@ for album in albums:
             url = heading.find("a")["href"].split("?from=")[0]
             attribution = result.find("div", class_="subhead").text.strip().split("by ")
             entry_artist = attribution[len(attribution)-1]
-            is_match = (entry_name.lower() == title.lower() or entry_name.lower().startswith(title.lower())) and (entry_artist.lower() == artist.lower() or entry_artist.lower().startswith(artist.lower()))
+
+            clean_title = re.sub(r"\s", "", title).lower()
+            clean_entry_name = re.sub(r"\s", "", entry_name).lower()
+            clean_artist = re.sub(r"\s", "", artist).lower()
+            clean_entry_artist = re.sub(r"\s", "", entry_artist).lower()
+
+            #print(clean_title, clean_entry_name, clean_artist, clean_entry_artist)
+
+            is_match = (clean_entry_name == clean_title or clean_entry_name.startswith(clean_title)) and (clean_entry_artist == clean_artist or clean_entry_artist.startswith(clean_artist))
             is_album = "/album" in url
             if is_match:
                 all_matches.append(url)
@@ -82,27 +109,48 @@ for album in albums:
             track_count = len(page_soup.find_all("tr", class_="track_row_view"))
             # Download if missing tracks, otherwise skip
             if existing_files_count < track_count:
-                print("MISSING "+str(track_count-existing_files_count)+" / "+str(track_count)+" TRACKS")
+                print("MISSING "+str(track_count-existing_files_count)+" OUT OF "+str(track_count)+" TRACKS")
                 print("DOWNLOADING...")
-                subprocess.run("cd \""+path+"\";yt-dlp "+url+" --embed-thumbnail --add-metadata --output \"%(playlist_index)s - %(title)s.%(ext)s\"", shell=True)
+
+                #subprocess.run("cd \""+path+"\";yt-dlp "+url+" --embed-thumbnail --add-metadata --output \"%(playlist_index)s - %(title)s.%(ext)s\"", shell=True)
+                ytdl_opts = {
+                    "ignoreerrors": True, 
+                    "verbose": False, 
+                    "outtmpl": path+"/%(playlist_index)s - %(title)s.%(ext)s", 
+                    'postprocessors': [
+                        {
+                            'key': 'FFmpegMetadata'
+                        }, 
+                        {
+                            'key': 'EmbedThumbnail',
+                            'already_have_thumbnail': True, 
+                        }
+                    ] 
+                }
+                with yt_dlp.YoutubeDL(ytdl_opts) as ydl:
+                    try:
+                        error_code = ydl.download(url)
+                    except:
+                        pass
+                
                 existing_files_count = len(os.listdir(path))
                 if existing_files_count < track_count:
                     print("SAVED "+str(existing_files_count)+" TRACKS TO "+path)
                     print("NOT ALL TRACKS COULD BE DOWNLOADED (LIKELY BECAUSE PREVIEWS ARE DISABLED. BUY THE ALBUM!)")
                     print("STILL MISSING "+str(track_count-existing_files_count)+" OUT OF "+str(track_count)+" TRACKS")
-                    partially_downloaded_urls.append(title+" BY "+artist+"    "+url)
+                    partially_downloaded_urls.append(title+" BY "+artist+" ("+str(existing_files_count)+"/"+str(track_count)+" DOWNLOADED)    "+url)
                 else:
                     print("DOWNLOAD COMPLETED SUCCESSFULLY!")
                     successful_count = successful_count + 1
             else:
                 print("ALBUM ALREADY DOWNLOADED")
                 existing_count = existing_count + 1
-            print(SEPARATOR)
         else:
-            albums_not_found.append(title+" BY "+artist)
+            albums_not_found.append(title+" BY "+artist+" ("+str(len(results))+" results, "+str(len(all_matches))+" matches)")
 
         # Wait a second to avoid getting rate-limited (haven't had any trouble with a 1-second delay)
         time.sleep(1)
+        print(SEPARATOR)
 
 print("DONE. REMEMBER TO BUY YOUR ALBUMS! THANK YOU FOR SUPPORTING ARTISTS DIRECTLY AND TAKING A STAND AGAINST DRM.\n")
 print("ALBUMS IN SPOTIFY DATA: "+str(album_count))
@@ -111,5 +159,7 @@ print("ALBUMS MISSING TRACKS: "+str(len(partially_downloaded_urls)))
 for partial in partially_downloaded_urls:
     print("    * "+partial)
 print("ALBUMS NOT FOUND ON BANDCAMP: "+str(len(albums_not_found)))
+if len(albums_not_found) > 0:
+    print("    (You might consider looking these up yourself just in case)")
 for notfound in albums_not_found:
     print("    * "+notfound)
