@@ -28,9 +28,10 @@ args = argparser.parse_args()
 parsed_albums = []
 with open(args.library_file, 'r') as file:
     data = json.load(file)
-    for track in data["tracks"]:
-        if args.artist == "" or track["artist"] == args.artist:
-            parsed_albums.append(track["album"] + " :::: " + track["artist"])
+    entries = data["tracks"] + data["albums"]
+    for entry in entries:
+        if args.artist == "" or entry["artist"] == args.artist:
+            parsed_albums.append(entry["album"] + " :::: " + entry["artist"])
     file.close()
 
 with open(args.playlists_file, 'r') as file:
@@ -112,7 +113,7 @@ for album in albums:
             track_count = max(1, len(page_soup.find_all("tr", class_="track_row_view")))
 
             # Download if missing tracks, otherwise skip
-            print("TRACK COUNTS: "+str(existing_files_count)+" / " + str(track_count))
+            print("TRACK COUNT: "+str(existing_files_count)+" / " + str(track_count))
             if existing_files_count < track_count:
                 print("MISSING "+str(track_count-existing_files_count)+" OUT OF "+str(track_count)+" TRACKS")
                 print("DOWNLOADING...")

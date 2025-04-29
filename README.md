@@ -6,7 +6,7 @@ The goal here is to help ease the transition from Spotify to DRM-free and artist
 
 It even embeds metadata and artwork, but you need ffmpeg installed to do this.
 
-This script is not meant to steal people's creative works, which is why the script only downloads the lossy mp3 previews from Bandcamp. It does not attempt to find lossless versions anywhere on the internet. If you want lossless music from the artists you enjoy, you should support them by paying for the album.
+This script is not meant to steal people's creative works. That is why the script only downloads the lossy mp3 previews from Bandcamp, and does not have access to tracks that artists have not enabled previews for. It does not attempt to find lossless versions anywhere on the internet. If you want the full lossless album, you should support the artist by paying for it.
 
 This shouldn't be an issue. You were already paying for music through Spotify, but because of their abysmal payout rates, you were essentially paying Spotify for the privilege of mooching off your favorite artists. A digital album is roughly the price of a month of Spotify, so buy one album a month and replace the old lossy version with your new lossless copy.
 
@@ -16,7 +16,7 @@ Everyone wins. Except Spotify, of course. Cry me a river.
 * Request a data download from Spotify, specifically the main one (not the extended history or technical data). It comes as a .zip after a few days.
 * Install Python 3
 * pip3 install the imports
-* Install ffmpeg on your system (it has to be accessible from anywhere in a command prompt / terminal, so you'll need to edit your PATH variable)
+* Install ffmpeg on your system (it has to be accessible from anywhere in a command prompt / terminal, so you'll need to edit your PATH variable if you're on Windows)
 
 # Usage
 
@@ -32,7 +32,6 @@ The script organizes your download in folders (Artist / Album) in the main outpu
 
 # TODO
 
-* Include saved albums in library file, since they might not be accounted for in the Liked Songs list
 * Save summary to a file
 * Include summary of album prices and total library value in summary
 * Add --ffmpeg_path argument to make setup easier
