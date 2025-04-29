@@ -6,11 +6,17 @@ The goal here is to help ease the transition from Spotify to DRM-free and artist
 
 It even embeds metadata and artwork, but you need ffmpeg installed to do this.
 
+This script is not meant to steal people's creative works, which is why the script only downloads the lossy mp3 previews from Bandcamp. It does not attempt to find lossless versions anywhere on the internet. If you want lossless music from the artists you enjoy, you should support them by paying for the album.
+
+This shouldn't be an issue. You were already paying for music through Spotify, but because of their abysmal payout rates, you were essentially paying Spotify for the privilege of mooching off your favorite artists. A digital album is roughly the price of a month of Spotify, so buy one album a month and replace the old lossy version with your new lossless copy.
+
+Everyone wins. Except Spotify, of course. Cry me a river.
+
 # Setup
 * Request a data download from Spotify, specifically the main one (not the extended history or technical data). It comes as a .zip after a few days.
 * Install Python 3
 * pip3 install the imports
-* Install ffmpeg on your system (it has to be accessible from anywhere in a command prompt / terminal)
+* Install ffmpeg on your system (it has to be accessible from anywhere in a command prompt / terminal, so you'll need to edit your PATH variable)
 
 # Usage
 
@@ -24,10 +30,9 @@ Optionally, you can also pass `--artist "Exact Artist Name"` to download only a 
 
 The script organizes your download in folders (Artist / Album) in the main output folder you specify.
 
-# Philosophy
+# TODO
 
-This script is not meant to steal people's creative works, which is why the script only downloads the lossy mp3 previews from Bandcamp. It does not attempt to find lossless versions anywhere on the internet. If you want lossless music from the artists you enjoy, you should support them by paying for the album.
-
-This shouldn't be an issue. You were already paying for music through Spotify, but because of their abysmal payout rates, you were essentially paying Spotify for the privilege of mooching off your favorite artists. A digital album is roughly the price of a month of Spotify, so buy one album a month and replace the old lossy version with your new lossless copy.
-
-Everyone wins. Except Spotify, of course. Cry me a river.
+* Include saved albums in library file, since they might not be accounted for in the Liked Songs list
+* Save summary to a file
+* Include summary of album prices and total library value in summary
+* Add --ffmpeg_path argument to make setup easier
