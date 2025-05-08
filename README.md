@@ -23,12 +23,20 @@ Everyone wins. Except Spotify, of course. Cry me a river.
 Extract the Spotify data export and find the library file and the playlist file. These contain every song you've liked enough to save somewhere. Run the command like so with the correct paths.
 
 ```
-python3 spotify_to_bandcamp.py --library_file YourLibrary.json --playlists_file Playlist1.json --output_folder /home/username/Music
+python3 ripper.py --library_file YourLibrary.json --playlists_file Playlist1.json --output_folder /home/username/Music
 ```
 
 Optionally, you can also pass `--artist "Exact Artist Name"` to download only a specific artist from your library.
 
 The script organizes your download in folders (Artist / Album) in the main output folder you specify.
+
+# M3UGen
+
+Given a Spotify playlists file, you can generate .m3u (playlist) files. Point it to the playlist file and output folder you used with `ripper.py`. It searches the output folder for the songs mentioned in the playlist. If they aren't found, it writes the track and artist name in a comment.
+
+```
+python3 m3ugen.py --playlists_file Playlist1.json --output_folder /home/username/Music
+```
 
 # TODO
 

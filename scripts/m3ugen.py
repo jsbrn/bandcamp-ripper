@@ -15,7 +15,6 @@ SEPARATOR = "----------------------------------"
 # Parse command line arguments
 argparser = argparse.ArgumentParser()
 argparser.add_argument("-p", "--playlists_file", type=pathlib.Path, required=True)
-argparser.add_argument("-l", "--library_file", type=pathlib.Path, required=True)
 argparser.add_argument("-o", "--output_folder", type=pathlib.Path, required=True)
 args = argparser.parse_args()
 
