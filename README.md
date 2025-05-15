@@ -18,21 +18,26 @@ Everyone wins. Except Spotify, of course. Cry me a river.
 * pip3 install the imports
 * Install ffmpeg on your system (it has to be accessible from anywhere in a command prompt / terminal, so you'll need to edit your PATH variable if you're on Windows)
 
-# Usage
+# Ripper.py - Usage
 
-Extract the Spotify data export and find the library file and the playlist file. These contain every song you've liked enough to save somewhere. Run the command like so with the correct paths.
+Extract the Spotify data export and find the library file and the playlist file. These contain every song you've liked enough to save somewhere. Pass them to the script as command line arguments. Here's an example of how to do it.
 
 ```
 python3 ripper.py --library_file YourLibrary.json --playlists_file Playlist1.json --output_folder /home/username/Music
 ```
 
+| Parameter | Example | Description |
+| - | - | - |
+| --artist / -a | --artist "Artist Name" | Runs against only one artist in your Spotify export, not the whole collection.
+| --dryrun / -d | --dryrun 1 | If included, the script will only search. It will not download. |
+
 Optionally, you can also pass `--artist "Exact Artist Name"` to download only a specific artist from your library.
 
 The script organizes your download in folders (Artist / Album) in the main output folder you specify.
 
-# M3UGen
+# M3UGen.py - Usage
 
-Given a Spotify playlists file, you can generate .m3u (playlist) files. Point it to the playlist file and output folder you used with `ripper.py`. It searches the output folder for the songs mentioned in the playlist. If they aren't found, it writes the track and artist name in a comment.
+Given a Spotify playlists file, you can generate .m3u (playlist) files. Point it to the playlist file and output folder you used with `ripper.py`. It searches the output folder for the songs mentioned in the playlist. If they aren't found, it writes the track and artist name in a comment. Exports the playlist files in the top level of your chosen output folder.
 
 ```
 python3 m3ugen.py --playlists_file Playlist1.json --output_folder /home/username/Music
@@ -40,6 +45,10 @@ python3 m3ugen.py --playlists_file Playlist1.json --output_folder /home/username
 
 # TODO
 
+* GUI
 * Save summary to a file
 * Include summary of album prices and total library value in summary
-* Add --ffmpeg_path argument to make setup easier
+
+# Known Bugs
+
+* `ripper.py` sometimes fails to find the album in the search result. Maybe a better solution is to look up the artist then search for the album on their page?

@@ -28,7 +28,7 @@ with open(args.playlists_file, 'r') as file:
             for item in playlist["items"]:
                 artist_name = item["track"]["artistName"]
                 track_name = item["track"]["trackName"]
-                path = os.path.join(output_folder, artist_name, "**/*"+str(track_name)+"*")
+                path = os.path.join(output_folder, artist_name, "**/*"+str(track_name)+".*")
                 print(str(path))
                 path_matches = glob.glob(path + "", recursive=True)
                 if len(path_matches) > 0:
