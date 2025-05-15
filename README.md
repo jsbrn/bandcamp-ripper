@@ -45,10 +45,15 @@ python3 m3ugen.py --playlists_file Playlist1.json --output_folder /home/username
 
 # TODO
 
+* More sources other than Spotify (ex. manually list multiple artists/albums)
 * GUI
 * Save summary to a file
 * Include summary of album prices and total library value in summary
 
 # Known Bugs
 
-* `ripper.py` sometimes fails to find the album in the search result. Maybe a better solution is to look up the artist then search for the album on their page?
+**ripper.py**
+
+* Sometimes fails to find the album in the search result. Maybe a better solution is to look up the artist then search for the album on their page?
+* Adds albums with slashes in the name in a nested folder (ex. songs from album "A/B" are put in folder "Artist/A/B")
+* Fails to create files and folders with invalid characters, probably needs to encode them
